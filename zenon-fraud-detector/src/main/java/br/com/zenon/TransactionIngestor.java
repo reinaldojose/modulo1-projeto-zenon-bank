@@ -2,12 +2,12 @@ package br.com.zenon;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -48,7 +48,7 @@ public class TransactionIngestor {
                 cont++;
                 if(cont == 1) continue;
                 var tr = createTr(col);
-                lstTransaction.add(tr);
+                lstTransaction.add(tr.orElse(null));
             }
 
             cont = 0;
@@ -61,7 +61,7 @@ public class TransactionIngestor {
     }
 
     //Método resposta da aula
-    public List<Transaction> readNioMap(String filename, String path) throws IOException{
+    public List<Transaction> readNioMap(String filename, String path) {
 
         var pathFilename = readFile(filename, path);
 
@@ -70,12 +70,22 @@ public class TransactionIngestor {
             return lines.stream()
                     .skip(1)
                     .limit(1000)
+//                    .<Transaction>mapMulti((line, consumer) -> {
+//                        try {
+//                            var tr = createTr(line);
+//                            consumer.accept(tr.orElse(null)); // Só envia para a lista final se não der erro
+//                        } catch (Exception e) {
+//                            System.err.println("Erro na linha [" + line + "]: " + e.getMessage());
+//                        }
+//                    })
                     .map(this::createTr)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .toList();
         } catch(Exception e){
-            throw new RuntimeException(e);
+            System.out.println(e.getMessage());
         }
-
+        return null;
     }
 
     private Path readFile(String fileName, String path) {
@@ -98,9 +108,9 @@ public class TransactionIngestor {
                 if(lineCount == 1)continue;
                 if(lineCount > 1001)break;
 
-                var tr = createTr(line);
+                var tr=  createTr(line);
 
-                lstTransaction.add(tr);
+                lstTransaction.add(tr.orElse(null));
             }
 
         } catch (Exception e) {
@@ -109,14 +119,37 @@ public class TransactionIngestor {
         return lstTransaction;
     }
 
-    public Transaction createTr(String line) {
-        var col = line.split(",");
-        return new Transaction(Integer.parseInt(col[0])
-                , TransactionType.valueOf(col[1])
-                , new BigDecimal(col[2])
-                , new TransactionActivity(col[3], new BigDecimal(col[4]), new BigDecimal(col[5]) )
-                , new TransactionActivity(col[6], new BigDecimal(col[7]), new BigDecimal(col[8]) )
-                , "1".equals(col[9])
-                , "1".equals(col[10]));
+    public Optional<Transaction> createTr(String line) {
+        try {
+            var col = line.split(",",-1);
+            return Optional.of(new Transaction(Integer.parseInt(col[0])
+                    , TransactionType.valueOf(col[1])
+                    , newBigDecimal(col[2])
+                    , new TransactionActivity(col[3], newBigDecimal(col[4]), newBigDecimal(col[5]) )
+                    , new TransactionActivity(col[6], newBigDecimal(col[7]), newBigDecimal(col[8]) )
+                    , newBoolean((col[9]))
+                    , newBoolean((col[10]))));
+        } catch(Exception e){
+            System.err.println("Erro na linha [" + line + "]: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private BigDecimal newBigDecimal(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("O valor para BigDecimal não pode ser nulo ou vazio.");
+        }
+        return new BigDecimal(value.trim());
+    }
+
+    private boolean newBoolean(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("O flag não pode ser nulo ou vazio.");
+        }
+        return switch (value.trim()) {
+            case "1" -> true;
+            case "0" -> false;
+            default -> throw new IllegalArgumentException("O flag deve ser '0' ou '1'.");
+        };
     }
 }

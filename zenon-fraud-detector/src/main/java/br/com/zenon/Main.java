@@ -30,7 +30,8 @@ public class Main {
 
         var ti = new TransactionIngestor();
         var path = "E:\\DEV\\faculdade\\data\\";
-        var filename = "PS_20174392719_1491204439457_log.csv";
+//        var filename = "PS_20174392719_1491204439457_log.csv";
+        var filename = "paysim_with_bad_data.csv";
 
         try {
 //            Usando JAVA NIO
@@ -43,7 +44,6 @@ public class Main {
 //            Usando File InputStream
             var lst = ti.readNioMap(filename, path);
             lst.stream().limit(10).forEach(IO::println);
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
