@@ -2,43 +2,29 @@ package br.com.zenon;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
-public class TransactionIngestor {
+public class TransactionIngestor extends TransacationUtils {
 
-    void main() {
-        var path = "E:\\DEV\\faculdade\\data\\";
-        var filename = "PS_20174392719_1491204439457_log.csv";
+    int limitSize = 50001;
 
-        try {
-//            Usando JAVA NIO
-//            readNio(filename, path);
+    final String path = "E:\\DEV\\faculdade\\data\\";
+    final String filename = "PS_20174392719_1491204439457_log.csv";
 
-//            Usando File InputStream
-//            var lst = readFI(path.concat(filename));
-//            lst.stream().limit(10).forEach(IO::println);
-
-//            Usando File InputStream
-            var lst = readNioMap(filename, path);
-            lst.stream().limit(10).forEach(IO::println);
-            
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public List<Transaction> readNioMap() {
+        return readNioMap(filename, path);
     }
 
     //Método que eu criei
     private void readNio(String filename, String path) throws IOException{
         try(Stream<String> lines = Files.lines(readFile(filename, path))){
             List<String> linhas = lines
-                    .limit(1001)
+                    .limit(limitSize)
                     .toList();
 
             List<Transaction> lstTransaction = new ArrayList<>();
@@ -62,14 +48,11 @@ public class TransactionIngestor {
 
     //Método resposta da aula
     public List<Transaction> readNioMap(String filename, String path) {
-
-        var pathFilename = readFile(filename, path);
-
         try{
-            List<String> lines = Files.readAllLines(pathFilename);
+            List<String> lines = Files.readAllLines(readFile(filename, path));
             return lines.stream()
                     .skip(1)
-                    .limit(1000)
+                    .limit(limitSize)
 //                    .<Transaction>mapMulti((line, consumer) -> {
 //                        try {
 //                            var tr = createTr(line);
@@ -86,10 +69,6 @@ public class TransactionIngestor {
             System.out.println(e.getMessage());
         }
         return null;
-    }
-
-    private Path readFile(String fileName, String path) {
-        return Path.of(path.concat(fileName));
     }
 
     //Método usando File Inputa Instream
@@ -117,39 +96,5 @@ public class TransactionIngestor {
             throw new RuntimeException("erro ao ler o arquivo" + filename, e);
         }
         return lstTransaction;
-    }
-
-    public Optional<Transaction> createTr(String line) {
-        try {
-            var col = line.split(",",-1);
-            return Optional.of(new Transaction(Integer.parseInt(col[0])
-                    , TransactionType.valueOf(col[1])
-                    , newBigDecimal(col[2])
-                    , new TransactionActivity(col[3], newBigDecimal(col[4]), newBigDecimal(col[5]) )
-                    , new TransactionActivity(col[6], newBigDecimal(col[7]), newBigDecimal(col[8]) )
-                    , newBoolean((col[9]))
-                    , newBoolean((col[10]))));
-        } catch(Exception e){
-            System.err.println("Erro na linha [" + line + "]: " + e.getMessage());
-            return Optional.empty();
-        }
-    }
-
-    private BigDecimal newBigDecimal(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("O valor para BigDecimal não pode ser nulo ou vazio.");
-        }
-        return new BigDecimal(value.trim());
-    }
-
-    private boolean newBoolean(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("O flag não pode ser nulo ou vazio.");
-        }
-        return switch (value.trim()) {
-            case "1" -> true;
-            case "0" -> false;
-            default -> throw new IllegalArgumentException("O flag deve ser '0' ou '1'.");
-        };
     }
 }
