@@ -40,30 +40,47 @@ public class Main {
 //            Usando File InputStream
 //            var lst = readFI(path.concat(filename));
 //            lst.stream().limit(10).forEach(IO::println);
-
 //            Usando File InputStream
             var lst = ti.readNioMap(filename, path);
 //            lst.stream().limit(10).forEach(IO::println);
 
 //            lst.stream().limit(10).forEach(IO::println);
-            FraudAnalizer analizer = new FraudAnalizer();
-            IO.println("#############################################################################################");
-            IO.println("1. Total de fraudes: " + analizer.quantityFrauds());
-            IO.println("#############################################################################################");
-            IO.println("2. Top 3 Fraudes de Maior Valor:");
-//            analizer.topFraudes(3).stream().map(Transaction::amount).forEach(IO::println);
-            analizer.topFraudes(3).forEach(amount -> IO.println("- %.2f".formatted(amount)));
-            IO.println("#############################################################################################");
-            IO.println("3. Clientes Suspeitos:");
-//            analizer.clientesSuspeitos(5).forEach(IO::println);
-            analizer.suspiciousClient(5).forEach(IO::println);
-            IO.println("#############################################################################################");
-            IO.println("4. Prejuízo Total: " + analizer.valorFraudes());
-            IO.println("#############################################################################################");
-            IO.println("5. Fraudes por Tipo:");
-            IO.println("- CASH_OUT: " + analizer.fraudsPorTipo("CASH_OUT"));
-            IO.println("- TRANSFER: " + analizer.fraudsPorTipo("TRANSFER"));
-            IO.println("#############################################################################################");
+
+//            FraudAnalizer analizer = new FraudAnalizer();
+//            IO.println("#############################################################################################");
+//            IO.println("1. Total de fraudes: " + analizer.quantityFrauds());
+//            IO.println("#############################################################################################");
+//            IO.println("2. Top 3 Fraudes de Maior Valor:");
+////            analizer.topFraudes(3).stream().map(Transaction::amount).forEach(IO::println);
+//            analizer.topFraudes(3).forEach(amount -> IO.println("- %.2f".formatted(amount)));
+//            IO.println("#############################################################################################");
+//            IO.println("3. Clientes Suspeitos:");
+////            analizer.clientesSuspeitos(5).forEach(IO::println);
+//            analizer.suspiciousClient(5).forEach(IO::println);
+//            IO.println("#############################################################################################");
+//            IO.println("4. Prejuízo Total: " + analizer.valorFraudes());
+//            IO.println("#############################################################################################");
+//            IO.println("5. Fraudes por Tipo:");
+//            IO.println("- CASH_OUT: " + analizer.fraudsPorTipo("CASH_OUT"));
+//            IO.println("- TRANSFER: " + analizer.fraudsPorTipo("TRANSFER"));
+//            IO.println("#############################################################################################");
+            TransactionListRepository tlr = new TransactionListRepository(lst);
+
+//            tlr.findByNameOrigin("C12345").ifPresentOrElse(IO::println, () -> IO.println("Transação não encontrada"));
+//            tlr.findByNameOrigin("C1231006815").ifPresentOrElse(IO::println, () -> IO.println("Transação não encontrada"));
+
+            long ini = System.nanoTime();
+            tlr.findByNameOrigin("C1868032458").ifPresentOrElse(IO::println, () -> IO.println("Transação não encontrada"));
+            long duration = System.nanoTime();
+            IO.println("Busca em List (ms) " + (duration - ini) / 1_000_000.0);
+
+            TransactionMapRepository mapRepository = new TransactionMapRepository(lst);
+            ini = System.nanoTime();
+            mapRepository.findByNameOrigin("C1868032458").ifPresentOrElse(IO::println, () -> IO.println("Transação não encontrada"));
+            duration = System.nanoTime();
+            IO.println("Busca em Map (ms) " + (duration - ini) / 1_000_000.0);
+
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
