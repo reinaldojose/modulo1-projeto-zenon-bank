@@ -11,10 +11,14 @@ import java.util.stream.Stream;
 
 public class TransactionIngestor extends TransacationUtils {
 
-    int limitSize = 50001;
+    int limitSize = 100000;
 
     final String path = "E:\\DEV\\faculdade\\data\\";
     final String filename = "PS_20174392719_1491204439457_log.csv";
+
+    public TransactionIngestor(){
+        this.limitSize = this.limitSize + 1;
+    }
 
     public List<Transaction> readNioMap() {
         return readNioMap(filename, path);
